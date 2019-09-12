@@ -1,7 +1,7 @@
 #!/bin/bash
 # kernel build script by geiti94 v0.1 (made for s10e/s10/s10/n10/n10+ sources)
 
-export MODEL=d1
+export MODEL=a50dd
 export VARIANT=eur
 export ARCH=arm64
 export BUILD_CROSS_COMPILE=/home/geiti94/Android/Toolchains/aarch64-linux-android-4.9/bin/aarch64-linux-android-
