@@ -377,7 +377,7 @@ LD		= $(CROSS_COMPILE)ld
 LDGOLD		= $(CROSS_COMPILE)ld.gold
 #CC		= $(CROSS_COMPILE)gcc
 #CC		= $(srctree)/toolchain/clang-4639204/bin/clang
-CC              = ../PLATFORM/prebuilts/clang/host/linux-x86/clang-4639204/bin/clang
+CC              = /home/geiti94/Android/Toolchains/clang-4691093/bin/clang
 CPP		= $(CC) -E
 AR		= $(CROSS_COMPILE)ar
 NM		= $(CROSS_COMPILE)nm
@@ -513,7 +513,7 @@ ifeq ($(cc-name),clang)
 ifneq ($(CROSS_COMPILE),)
 #CLANG_TRIPLE	?= $(CROSS_COMPILE)
 #CLANG_TRIPLE ?= $(srctree)/toolchain/clang-4639204/bin/aarch64-linux-gnu-
-CLANG_TRIPLE ?= ../PLATFORM/prebuilts/clang/host/linux-x86/clang-4639204/bin/aarch64-linux-gnu-
+CLANG_TRIPLE	?= /home/geiti94/Android/Toolchains/clang-4691093/bin/aarch64-linux-gnu-
 CLANG_TARGET	:= --target=$(notdir $(CLANG_TRIPLE:%-=%))
 GCC_TOOLCHAIN	:= $(realpath $(dir $(shell which $(LD)))/..)
 $(info GCC_TOOLCHAIN - $(GCC_TOOLCHAIN))
