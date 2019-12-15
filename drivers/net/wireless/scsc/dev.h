@@ -688,7 +688,9 @@ struct netdev_vif {
 	atomic_t                    is_registered;         /* Has the net dev been registered */
 	bool                        is_available;          /* Has the net dev been opened AND is usable */
 	bool                        is_fw_test;            /* Is the device in use as a test device via UDI */
-
+#ifdef CONFIG_SLSI_WLAN_STA_FWD_BEACON
+	bool                        is_wips_running;
+#endif
 	/* Structure can be accessed by cfg80211 ops, procfs/ioctls and as a result
 	 * of receiving MLME indications e.g. MLME-CONNECT-IND that can affect the
 	 * status of the interface eg. STA connect failure will delete the VIF.

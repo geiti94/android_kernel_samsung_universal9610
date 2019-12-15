@@ -374,6 +374,71 @@ void slsi_rx_scan_ind(struct slsi_dev *sdev, struct net_device *dev, struct sk_b
 		SLSI_MUTEX_UNLOCK(ndev_vif->scan_mutex);
 }
 
+#ifdef CONFIG_SLSI_WLAN_STA_FWD_BEACON
+void slsi_rx_beacon_reporting_event_ind(struct slsi_dev *sdev, struct net_device *dev, struct sk_buff *skb)
+{
+	struct netdev_vif     *ndev_vif = netdev_priv(dev);
+	u16 reason_code = fapi_get_u16(skb, u.mlme_beacon_reporting_event_ind.abort_reason) -
+			  SLSI_FORWARD_BEACON_ABORT_REASON_OFFSET;
+	int ret = 0;
+
+	if (!ndev_vif->is_wips_running) {
+		SLSI_ERR(sdev, "WIPS is not running. Ignore beacon_reporting_event_ind(%u)\n", reason_code);
+		return;
+	}
+
+	ndev_vif->is_wips_running = false;
+
+	if (reason_code >= SLSI_FORWARD_BEACON_ABORT_REASON_UNSPECIFIED &&
+	    reason_code <= SLSI_FORWARD_BEACON_ABORT_REASON_SUSPENDED) {
+		SLSI_INFO(sdev, "received abort_event from FW with reason(%u)\n", reason_code);
+	} else {
+		SLSI_ERR(sdev, "received abort_event unsupporting reason(%u)\n", reason_code);
+	}
+
+	ret = slsi_send_forward_beacon_abort_vendor_event(sdev, reason_code);
+	if (ret)
+		SLSI_ERR(sdev, "Failed to send forward_beacon_abort_event(err=%d)\n", ret);
+}
+
+void slsi_handle_wips_beacon(struct slsi_dev *sdev, struct net_device *dev, struct sk_buff *skb,
+			     struct ieee80211_mgmt *mgmt, int mgmt_len)
+{
+	struct netdev_vif *ndev_vif = netdev_priv(dev);
+	size_t ie_len = mgmt_len - offsetof(struct ieee80211_mgmt, u.beacon.variable);
+	const u8 *ssid_ie = NULL;
+	const u8 *scan_ssid = NULL;
+	const u8 *scan_bssid = NULL;
+	u16 beacon_int = 0;
+	u64 timestamp = 0;
+	int ssid_len = 0;
+	struct timespec sys_time;
+	int ret = 0;
+
+	u8 channel = (u8)(ndev_vif->chan->hw_value);
+
+	get_monotonic_boottime(&sys_time);
+	scan_bssid = fapi_get_mgmt(skb)->bssid;
+
+	ssid_ie = cfg80211_find_ie(WLAN_EID_SSID, mgmt->u.beacon.variable, ie_len);
+	ssid_len = ssid_ie[1];
+	scan_ssid = &ssid_ie[2];
+	beacon_int = mgmt->u.beacon.beacon_int;
+	timestamp = mgmt->u.beacon.timestamp;
+
+	SLSI_NET_DBG2(dev, SLSI_RX,
+		      "forward_beacon from bssid:%pM beacon_int:%u timestamp:%llu system_time:%llu\n",
+		      fapi_get_mgmt(skb)->bssid, beacon_int, timestamp,
+		      (u64)TIMESPEC_TO_US(sys_time));
+
+	ret = slsi_send_forward_beacon_vendor_event(sdev, scan_ssid, ssid_len, scan_bssid,
+						    channel, beacon_int, timestamp,
+						    (u64)TIMESPEC_TO_US(sys_time));
+	if (ret)
+		SLSI_ERR(sdev, "Failed to forward beacon_event\n");
+}
+#endif
+
 static void slsi_scan_update_ssid_map(struct slsi_dev *sdev, struct net_device *dev, u16 scan_id)
 {
 	struct netdev_vif     *ndev_vif = netdev_priv(dev);
@@ -963,7 +1028,7 @@ void slsi_rx_scan_done_ind(struct slsi_dev *sdev, struct net_device *dev, struct
 
 void slsi_rx_channel_switched_ind(struct slsi_dev *sdev, struct net_device *dev, struct sk_buff *skb)
 {
-	u16 freq;
+	u16 freq = 0;
 	int width;
 	int primary_chan_pos;
 	u16 temp_chan_info;
@@ -972,19 +1037,19 @@ void slsi_rx_channel_switched_ind(struct slsi_dev *sdev, struct net_device *dev,
 	struct netdev_vif *ndev_vif = netdev_priv(dev);
 
 	temp_chan_info = fapi_get_u16(skb, u.mlme_channel_switched_ind.channel_information);
-	freq = fapi_get_u16(skb, u.mlme_channel_switched_ind.channel_frequency);
-	freq = freq / 2;
+	cf1 = fapi_get_u16(skb, u.mlme_channel_switched_ind.channel_frequency);
+	cf1 = cf1 / 2;
 
 	primary_chan_pos = (temp_chan_info >> 8);
 	width = (temp_chan_info & 0x00FF);
 
-	/*If width is 80Mhz then do frequency calculation, else store as it is*/
+	/* If width is 80MHz/40MHz then do frequency calculation, else store as it is */
 	if (width == 40)
-		cf1 = (10 + freq - (primary_chan_pos * 20));
+		freq = cf1 + (primary_chan_pos * 20) - 10;
 	else if (width == 80)
-		cf1 = (30 + freq - (primary_chan_pos * 20));
+		freq = cf1 + (primary_chan_pos * 20) - 30;
 	else
-		cf1 = freq;
+		freq = cf1;
 
 	if (width == 20)
 		width = NL80211_CHAN_WIDTH_20;
@@ -2380,6 +2445,13 @@ void slsi_rx_received_frame_ind(struct slsi_dev *sdev, struct net_device *dev, s
 			cfg80211_rx_mgmt(&ndev_vif->wdev, frequency, 0, (const u8 *)mgmt, mgmt_len, GFP_ATOMIC);
 			goto exit;
 		}
+#ifdef CONFIG_SLSI_WLAN_STA_FWD_BEACON
+		if (ndev_vif->is_wips_running && ieee80211_is_beacon(mgmt->frame_control) &&
+		    SLSI_IS_VIF_INDEX_WLAN(ndev_vif)) {
+			slsi_handle_wips_beacon(sdev, dev, skb, mgmt, mgmt_len);
+			goto exit;
+		}
+#endif
 		if (WARN_ON(!(ieee80211_is_action(mgmt->frame_control))))
 			goto exit;
 		if (SLSI_IS_VIF_INDEX_WLAN(ndev_vif)) {

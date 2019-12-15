@@ -539,6 +539,12 @@ int slsi_start(struct slsi_dev *sdev)
 #endif
 	char buf[512];
 #endif
+#ifdef CONFIG_SCSC_WLAN_SET_PREFERRED_ANTENNA
+	struct file *file_ptr = NULL;
+	char *ant_file_path = "/data/vendor/conn/.ant.info";
+	char ant_mode = '0';
+	u16 antenna = 0;
+#endif
 
 	if (WARN_ON(!sdev))
 		return -EINVAL;
@@ -710,6 +716,28 @@ int slsi_start(struct slsi_dev *sdev)
 		SLSI_DBG2(sdev, SLSI_INIT_DEINIT, "Succeed to write softap information to .softap.info\n");
 	}
 #endif
+
+#ifdef CONFIG_SCSC_WLAN_SET_PREFERRED_ANTENNA
+	/* reading antenna mode from /data/vendor/conn/.ant.info */
+	file_ptr = filp_open(ant_file_path, O_RDONLY, 0);
+
+	if (!file_ptr)  {
+		SLSI_DBG1(sdev, SLSI_CFG80211, "%s doesn't exist\n", ant_file_path);
+	} else if (IS_ERR(file_ptr)) {
+		SLSI_DBG1(sdev, SLSI_CFG80211, "%s open returned error %d\n", ant_file_path, IS_ERR(file_ptr));
+	} else {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0)
+		kernel_read(file_ptr, &ant_mode, 1, &file_ptr->f_pos);
+#else
+		kernel_read(file_ptr, file_ptr->f_pos, &ant_mode, 1);
+#endif
+		antenna = ant_mode - '0';
+		filp_close(file_ptr, NULL);
+
+		slsi_set_mib_preferred_antenna(sdev, antenna);
+	}
+#endif
+
 #ifdef CONFIG_SCSC_LOG_COLLECTION
 	/* Register with log collector to collect wlan hcf file */
 	slsi_hcf_client.prv = sdev;
@@ -1546,6 +1574,25 @@ int slsi_set_mib_roam(struct slsi_dev *dev, struct net_device *ndev, u16 psid, i
 	return error;
 }
 
+#ifdef CONFIG_SCSC_WLAN_SET_PREFERRED_ANTENNA
+int slsi_set_mib_preferred_antenna(struct slsi_dev *dev, u16 value)
+{
+	struct slsi_mib_data mib_data = { 0, NULL };
+	int error = SLSI_MIB_STATUS_FAILURE;
+
+	if (slsi_mib_encode_uint(&mib_data, SLSI_PSID_UNIFI_PREFERRED_ANTENNA_BIT_MAP,
+				 value, 0) == SLSI_MIB_STATUS_SUCCESS)
+		if (mib_data.dataLength) {
+			error = slsi_mlme_set(dev, NULL, mib_data.data, mib_data.dataLength);
+			if (error)
+				SLSI_ERR(dev, "Err Setting MIB failed. error = %d\n", error);
+			kfree(mib_data.data);
+		}
+
+	return error;
+}
+#endif
+
 void slsi_reset_throughput_stats(struct net_device *dev)
 {
 	struct netdev_vif *ndev_vif = netdev_priv(dev);
@@ -1900,6 +1947,92 @@ int slsi_send_hanged_vendor_event(struct slsi_dev *sdev, u16 scsc_panic_code)
 	return 0;
 }
 
+#ifdef CONFIG_SLSI_WLAN_STA_FWD_BEACON
+int slsi_send_forward_beacon_vendor_event(struct slsi_dev *sdev, const u8 *ssid, const int ssid_len, const u8 *bssid,
+					  u8 channel, const u16 beacon_int, const u64 timestamp, const u64 sys_time)
+{
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
+	struct sk_buff *skb;
+	u8 err = 0;
+	struct net_device *dev;
+	struct netdev_vif *ndev_vif;
+
+	dev = slsi_get_netdev(sdev, SLSI_NET_INDEX_WLAN);
+	ndev_vif = netdev_priv(dev);
+
+	SLSI_DBG2(sdev, SLSI_CFG80211, "Sending SLSI_NL80211_VENDOR_FORWARD_BEACON\n");
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0))
+	skb = cfg80211_vendor_event_alloc(sdev->wiphy, &ndev_vif->wdev, NLMSG_DEFAULT_SIZE,
+					  SLSI_NL80211_VENDOR_FORWARD_BEACON, GFP_KERNEL);
+#else
+	skb = cfg80211_vendor_event_alloc(sdev->wiphy, NLMSG_DEFAULT_SIZE,
+					  SLSI_NL80211_VENDOR_FORWARD_BEACON, GFP_KERNEL);
+#endif
+	if (!skb) {
+		SLSI_ERR_NODEV("Failed to allocate SKB for vendor forward_beacon event\n");
+		return -ENOMEM;
+	}
+
+	err |= nla_put(skb, SLSI_WLAN_VENDOR_ATTR_FORWARD_BEACON_SSID, ssid_len, ssid);
+	err |= nla_put(skb, SLSI_WLAN_VENDOR_ATTR_FORWARD_BEACON_BSSID, ETH_ALEN, bssid);
+	err |= nla_put_u8(skb, SLSI_WLAN_VENDOR_ATTR_FORWARD_BEACON_CHANNEL, channel);
+	err |= nla_put_u16(skb, SLSI_WLAN_VENDOR_ATTR_FORWARD_BEACON_BCN_INTERVAL, beacon_int);
+	err |= nla_put_u32(skb, SLSI_WLAN_VENDOR_ATTR_FORWARD_BEACON_TIME_STAMP1, (timestamp & 0x00000000FFFFFFFF));
+	err |= nla_put_u32(skb, SLSI_WLAN_VENDOR_ATTR_FORWARD_BEACON_TIME_STAMP2,
+			   ((timestamp >> 32) & 0x00000000FFFFFFFF));
+	err |= nla_put_u64_64bit(skb, SLSI_WLAN_VENDOR_ATTR_FORWARD_BEACON_SYS_TIME, sys_time, 0);
+
+	if (err) {
+		SLSI_ERR_NODEV("Failed nla_put for forward_beacon\n");
+		slsi_kfree_skb(skb);
+		return -EINVAL;
+	}
+	cfg80211_vendor_event(skb, GFP_KERNEL);
+
+#endif
+	return 0;
+}
+
+int slsi_send_forward_beacon_abort_vendor_event(struct slsi_dev *sdev, u16 reason_code)
+{
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0))
+	struct sk_buff *skb;
+	u8 err = 0;
+	struct net_device *dev;
+	struct netdev_vif *ndev_vif;
+
+	dev = slsi_get_netdev(sdev, SLSI_NET_INDEX_WLAN);
+	ndev_vif = netdev_priv(dev);
+
+	SLSI_INFO(sdev, "Sending SLSI_NL80211_VENDOR_FORWARD_BEACON_ABORT\n");
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0))
+	skb = cfg80211_vendor_event_alloc(sdev->wiphy, &ndev_vif->wdev, sizeof(reason_code),
+					  SLSI_NL80211_VENDOR_FORWARD_BEACON_ABORT, GFP_KERNEL);
+#else
+	skb = cfg80211_vendor_event_alloc(sdev->wiphy, sizeof(reason_code),
+					  SLSI_NL80211_VENDOR_FORWARD_BEACON_ABORT, GFP_KERNEL);
+#endif
+	if (!skb) {
+		SLSI_ERR_NODEV("Failed to allocate SKB for vendor forward_beacon_abort event\n");
+		return -ENOMEM;
+	}
+
+	err = nla_put_u16(skb, SLSI_WLAN_VENDOR_ATTR_FORWARD_BEACON_ABORT, reason_code);
+
+	if (err) {
+		SLSI_ERR_NODEV("Failed nla_put for beacon_recv_abort\n");
+		slsi_kfree_skb(skb);
+		return -EINVAL;
+	}
+	cfg80211_vendor_event(skb, GFP_KERNEL);
+
+#endif
+	return 0;
+}
+#endif
+
 #ifdef CONFIG_SCSC_WLAN_HANG_TEST
 int slsi_test_send_hanged_vendor_event(struct net_device *dev)
 {
@@ -2160,6 +2293,9 @@ void slsi_vif_deactivated(struct slsi_dev *sdev, struct net_device *dev)
 			ndev_vif->sta.sta_bss = NULL;
 		}
 		ndev_vif->sta.tdls_enabled = false;
+#ifdef CONFIG_SLSI_WLAN_STA_FWD_BEACON
+		ndev_vif->is_wips_running = false;
+#endif
 	}
 
 	/* MUST be done first to ensure that other code doesn't treat the VIF as still active */
@@ -4862,6 +4998,25 @@ int slsi_set_mib_rssi_boost(struct slsi_dev *sdev, struct net_device *dev, u16 p
 	return error;
 }
 
+#ifdef CONFIG_SCSC_WLAN_LOW_LATENCY_MODE
+int slsi_set_mib_soft_roaming_enabled(struct slsi_dev *sdev, struct net_device *dev, bool enable)
+{
+	struct slsi_mib_data mib_data = { 0, NULL };
+	int error = SLSI_MIB_STATUS_FAILURE;
+
+	if (slsi_mib_encode_bool(&mib_data, SLSI_PSID_UNIFI_ROAM_SOFT_ROAMING_ENABLED,
+				 enable, 0) == SLSI_MIB_STATUS_SUCCESS)
+		if (mib_data.dataLength) {
+			error = slsi_mlme_set(sdev, dev, mib_data.data, mib_data.dataLength);
+			if (error)
+				SLSI_ERR(sdev, "Err Setting MIB failed. error = %d\n", error);
+			kfree(mib_data.data);
+		}
+
+	return error;
+}
+#endif
+
 void slsi_modify_ies_on_channel_switch(struct net_device *dev, struct cfg80211_ap_settings *settings,
 				       u8 *ds_params_ie, u8 *ht_operation_ie, struct ieee80211_mgmt  *mgmt,
 				       u16 beacon_ie_head_len)
@@ -5605,3 +5760,47 @@ int slsi_find_chan_idx(u16 chan, u8 hw_mode)
 	return idx;
 }
 
+#ifdef CONFIG_SCSC_WLAN_SET_NUM_ANTENNAS
+/* Note : netdev_vif lock should be taken care by caller. */
+int slsi_set_num_antennas(struct net_device *dev, const u16 num_of_antennas)
+{
+	struct netdev_vif *ndev_vif = netdev_priv(dev);
+	struct slsi_dev   *sdev = ndev_vif->sdev;
+	struct sk_buff    *req;
+	struct sk_buff    *cfm;
+	int               ret = 0;
+	const bool        is_sta = (ndev_vif->iftype == NL80211_IFTYPE_STATION);
+	const bool        is_softap = (ndev_vif->iftype == NL80211_IFTYPE_AP);
+
+	WARN_ON(!SLSI_MUTEX_IS_LOCKED(ndev_vif->vif_mutex));
+
+	if (num_of_antennas > 2 || num_of_antennas == 0) {
+		SLSI_NET_ERR(dev, "Invalid num_of_antennas %hu\n", num_of_antennas);
+		return -EINVAL;
+	}
+	if (!is_sta && !is_softap) {
+		SLSI_NET_ERR(dev, "Invalid interface type %s\n", dev->name);
+		return -EPERM;
+	}
+	if (is_sta && (ndev_vif->sta.vif_status != SLSI_VIF_STATUS_CONNECTED)) {
+		SLSI_NET_ERR(dev, "sta is not in connected state\n");
+		return -EPERM;
+	}
+	SLSI_NET_INFO(dev, "mlme_set_num_antennas_req(vif:%u num_of_antennas:%u)\n", ndev_vif->ifnum, num_of_antennas);
+	/* TODO: Change signal name to MLME_SET_NUM_ANTENNAS_REQ and MLME_SET_NUM_ANTENNAS_CFM. */
+	req = fapi_alloc(mlme_set_nss_req, MLME_SET_NSS_REQ, ndev_vif->ifnum, 0);
+	fapi_set_u16(req, u.mlme_set_nss_req.vif, ndev_vif->ifnum);
+	fapi_set_u16(req, u.mlme_set_nss_req.rx_nss, num_of_antennas);
+	cfm = slsi_mlme_req_cfm(sdev, dev, req, MLME_SET_NSS_CFM);
+	if (!cfm)
+		return -EIO;
+
+	if (fapi_get_u16(cfm, u.mlme_set_nss_cfm.result_code) != FAPI_RESULTCODE_SUCCESS) {
+		SLSI_NET_ERR(dev, "mlme_set_nss_cfm(result:0x%04x) ERROR\n",
+			     fapi_get_u16(cfm, u.mlme_set_nss_cfm.result_code));
+		ret = -EINVAL;
+	}
+	slsi_kfree_skb(cfm);
+	return ret;
+}
+#endif

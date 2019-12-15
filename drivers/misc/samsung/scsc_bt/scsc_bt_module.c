@@ -386,6 +386,12 @@ static int slsi_sm_bt_service_cleanup(bool allow_service_stop)
 
 	atomic_set(&bt_service.error_count, 0);
 
+	/* Release write wake lock if held */
+	if (wake_lock_active(&bt_service.write_wake_lock)) {
+		bt_service.write_wake_unlock_count++;
+		wake_unlock(&bt_service.write_wake_lock);
+	}
+
 	SCSC_TAG_DEBUG(BT_COMMON, "complete\n");
 	return 0;
 
@@ -1411,6 +1417,7 @@ static void slsi_bt_service_remove(struct scsc_mx_module_client *module_client,
 		/* Wait forever for recovery_release_complete, as it will
 		 * arrive even if autorecovery is disabled.
 		 */
+		SCSC_TAG_INFO(BT_COMMON, "wait for recovery_release_complete\n");
 		wait_for_completion(&bt_service.recovery_release_complete);
 		reinit_completion(&bt_service.recovery_release_complete);
 
@@ -1432,6 +1439,9 @@ static void slsi_bt_service_remove(struct scsc_mx_module_client *module_client,
 
 done:
 	mutex_unlock(&bt_start_mutex);
+
+	SCSC_TAG_INFO(BT_COMMON,
+	      "BT service remove complete (%s %p)\n", module_client->name, mx);
 }
 
 /* BT service driver registration interface */
@@ -1522,6 +1532,9 @@ static void slsi_ant_service_remove(struct scsc_mx_module_client *module_client,
 
 done:
 	mutex_unlock(&ant_start_mutex);
+
+	SCSC_TAG_INFO(BT_COMMON,
+		      "ANT service remove complete (%s %p)\n", module_client->name, mx);
 }
 #endif
 

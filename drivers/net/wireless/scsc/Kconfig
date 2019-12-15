@@ -217,3 +217,37 @@ config SCSC_WLAN_ENHANCED_PKT_FILTER
           This option tells if UDP packet filtering in suspend is
           supported or not.
 
+config SCSC_WLAN_SET_NUM_ANTENNAS
+        bool "Enable configuring of number of antennas"
+        default n
+        ---help---
+          This option tells whether configuring of number of antennas is enabled or not.
+
+config SCSC_ENHANCED_PACKET_STATS
+        bool "Enable enhanced packet stats"
+        default n
+        ---help---
+          This option tells whether enhanced packet stats collection
+          is enabled or not.
+
+config SCSC_WLAN_LOW_LATENCY_MODE
+        bool "Support enabling/disabling roaming as per latency mode"
+        default n
+        ---help---
+          This option tells whether support is provided for enabling
+          or disabling roaming as per the latency mode.
+
+config SCSC_WLAN_SET_PREFERRED_ANTENNA
+        bool "Enable the driver to set preferred antenna"
+        default n
+        ---help---
+          This option enables the driver to set the preferred antenna.
+
+config SLSI_WLAN_STA_FWD_BEACON
+        bool "Forwarding beacon support"
+        default y
+        ---help---
+          This option tells if beacon forwarding in STA mode is enabled or not.
+          When it is enabled, Driver deliver beacon info of connected AP to Supplicant.
+
+

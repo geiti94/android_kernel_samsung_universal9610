@@ -25,44 +25,6 @@
 #define SLSI_NOA_CONFIG_REQUEST_ID          (1)
 #define SLSI_MLME_ARP_DROP_FREE_SLOTS_COUNT 16
 
-#define SLSI_FAPI_NAN_ATTRIBUTE_PUT_U8(req, attribute, val) \
-{ \
-	u16 attribute_len = 1; \
-	struct sk_buff *req_p = req; \
-	fapi_append_data((req_p), (u8 *)&(attribute), 2); \
-	fapi_append_data((req_p), (u8 *)&attribute_len, 2); \
-	fapi_append_data((req_p), (u8 *)&(val), 1); \
-}
-
-#define SLSI_FAPI_NAN_ATTRIBUTE_PUT_U16(req, attribute, val) \
-{ \
-	u16 attribute_len = 2; \
-	__le16 le16val = cpu_to_le16(val); \
-	struct sk_buff *req_p = req; \
-	fapi_append_data((req_p), (u8 *)&(attribute), 2); \
-	fapi_append_data((req_p), (u8 *)&attribute_len, 2); \
-	fapi_append_data((req_p), (u8 *)&le16val, 2); \
-}
-
-#define SLSI_FAPI_NAN_ATTRIBUTE_PUT_U32(req, attribute, val) \
-{ \
-	u16 attribute_len = 4; \
-	__le32 le32val = cpu_to_le32(val);\
-	struct sk_buff *req_p = req; \
-	fapi_append_data((req_p), (u8 *)&(attribute), 2); \
-	fapi_append_data((req_p), (u8 *)&attribute_len, 2); \
-	fapi_append_data((req_p), (u8 *)&le32val, 4); \
-}
-
-#define SLSI_FAPI_NAN_ATTRIBUTE_PUT_DATA(req, attribute, val, val_len) \
-{ \
-	u16 attribute_len = (val_len); \
-	struct sk_buff *req_p = req; \
-	fapi_append_data((req_p), (u8 *)&(attribute), 2); \
-	fapi_append_data((req_p), (u8 *)&attribute_len, 2); \
-	fapi_append_data((req_p), (val), (attribute_len)); \
-}
-
 static bool missing_cfm_ind_panic = true;
 module_param(missing_cfm_ind_panic, bool, S_IRUGO | S_IWUSR);
 MODULE_PARM_DESC(missing_cfm_ind_panic, "Panic on missing confirm or indication from the chip");
@@ -886,6 +848,47 @@ void slsi_mlme_del_vif(struct slsi_dev *sdev, struct net_device *dev)
 
 	slsi_kfree_skb(cfm);
 }
+
+#ifdef CONFIG_SLSI_WLAN_STA_FWD_BEACON
+int slsi_mlme_set_forward_beacon(struct slsi_dev *sdev, struct net_device *dev, int action)
+{
+	struct netdev_vif *ndev_vif = netdev_priv(dev);
+	struct sk_buff    *req;
+	struct sk_buff    *cfm;
+
+	if (slsi_is_test_mode_enabled()) {
+		SLSI_NET_INFO(dev, "wlanlite does not support mlme_forward_bacon_req\n");
+		return -EOPNOTSUPP;
+	}
+
+	SLSI_NET_DBG2(dev, SLSI_MLME, "mlme_forward_beacon_req(action = %s(%d))\n", action ? "start" : "stop", action);
+
+	req = fapi_alloc(mlme_forward_beacon_req, MLME_FORWARD_BEACON_REQ, ndev_vif->ifnum, 0);
+	if (!req) {
+		SLSI_NET_ERR(dev, "fapi alloc for mlme_forward_beacon_req is failed\n");
+		return -ENOMEM;
+	}
+
+	fapi_set_u16(req, u.mlme_forward_beacon_req.wips_action, action);
+
+	cfm = slsi_mlme_req_cfm(sdev, dev, req, MLME_FORWARD_BEACON_CFM);
+	if (!cfm) {
+		SLSI_NET_ERR(dev, "receiving mlme_forward_beacon_cfm is failed\n");
+		return -EIO;
+	}
+
+	if (fapi_get_u16(cfm, u.mlme_forward_beacon_cfm.result_code) != FAPI_RESULTCODE_HOST_REQUEST_SUCCESS) {
+		SLSI_NET_ERR(dev, "mlme_forward_beacon_cfm(result:0x%04x) ERROR\n",
+			     fapi_get_u16(cfm, u.mlme_forward_beacon_cfm.result_code));
+		return -EINVAL;
+	}
+
+	ndev_vif->is_wips_running = (action ? true : false);
+
+	slsi_kfree_skb(cfm);
+	return 0;
+}
+#endif
 
 int slsi_mlme_set_channel(struct slsi_dev *sdev, struct net_device *dev, struct ieee80211_channel *chan, u16 duration, u16 interval, u16 count)
 {
@@ -2547,6 +2550,9 @@ int slsi_mlme_get_sinfo_mib(struct slsi_dev *sdev, struct net_device *dev,
 		{ SLSI_PSID_UNIFI_FRAME_TX_COUNTERS, { 1, 0 } },    /*tx good count*/
 		{ SLSI_PSID_UNIFI_FRAME_TX_COUNTERS, { 2, 0 } },    /*tx bad count*/
 		{ SLSI_PSID_UNIFI_FRAME_RX_COUNTERS, { 1, 0 } },    /*rx good count*/
+#ifdef CONFIG_SCSC_ENHANCED_PACKET_STATS
+		{ SLSI_PSID_UNIFI_FRAME_TX_COUNTERS, { 3, 0 } },    /*tx retry count*/
+#endif
 	};
 	int rx_counter = 0;
 
@@ -2568,9 +2574,9 @@ int slsi_mlme_get_sinfo_mib(struct slsi_dev *sdev, struct net_device *dev,
 
 	/* Fixed fields len (5) : 2 bytes(PSID) + 2 bytes (Len) + 1 byte (VLDATA header )  [10 for 2 PSIDs]
 	 * Data : 3 bytes for SLSI_PSID_UNIFI_TX_DATA_RATE , 1 byte for SLSI_PSID_UNIFI_RSSI
-	 * 10*6 bytes for 3 Throughput Mib's and 3 counter Mib's
+	 * 10*7 bytes for 3 Throughput Mib's and 4 counter Mib's
 	 */
-	mibrsp.dataLength = 74;
+	mibrsp.dataLength = 84;
 	mibrsp.data = kmalloc(mibrsp.dataLength, GFP_KERNEL);
 
 	if (!mibrsp.data) {
@@ -2644,12 +2650,21 @@ int slsi_mlme_get_sinfo_mib(struct slsi_dev *sdev, struct net_device *dev,
 			peer->sinfo.rx_packets = values[7].u.uintValue; /*rx good count*/
 		else
 			SLSI_ERR(sdev, "invalid type. iter:%d", 7);
+#ifdef CONFIG_SCSC_ENHANCED_PACKET_STATS
+		if (values[8].type == SLSI_MIB_TYPE_UINT)
+			peer->sinfo.tx_retries = values[8].u.uintValue; /*tx retry count*/
+		else
+			SLSI_ERR(sdev, "invalid type. iter:%d", 8);
+#endif
 
 		peer->sinfo.rx_dropped_misc = rx_counter;
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 0, 0))
 		peer->sinfo.filled |= BIT(NL80211_STA_INFO_TX_FAILED) | BIT(NL80211_STA_INFO_RX_DROP_MISC) |
 				      BIT(NL80211_STA_INFO_TX_PACKETS) | BIT(NL80211_STA_INFO_RX_PACKETS);
+#ifdef CONFIG_SCSC_ENHANCED_PACKET_STATS
+		peer->sinfo.filled |= BIT(NL80211_STA_INFO_TX_RETRIES);
+#endif
 #endif
 	} else {
 		SLSI_NET_DBG1(dev, SLSI_MLME, "mlme_get_req failed(result:0x%4x)\n", r);

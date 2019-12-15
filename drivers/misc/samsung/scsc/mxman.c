@@ -2468,4 +2468,3 @@ int mxman_lerna_send(struct mxman *mxman, void *message, u32 message_size)
 	mutex_unlock(&active_mxman->mxman_mutex);
 	return -EAGAIN;
 }
-EXPORT_SYMBOL(mxman_lerna_send);

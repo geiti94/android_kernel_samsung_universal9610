@@ -11,6 +11,8 @@
 #include "hip.h"
 #include "mgt.h"
 #include "scsc_wifilogger_rings.h"
+#include "nl80211_vendor.h"
+#include "mlme.h"
 
 #define SUPPORTED_OLD_VERSION   0
 
@@ -30,6 +32,9 @@ static struct sap_api sap_mlme = {
 static int sap_mlme_notifier(struct slsi_dev *sdev, unsigned long event)
 {
 	int i;
+#ifdef CONFIG_SLSI_WLAN_STA_FWD_BEACON
+	struct net_device *dev;
+#endif
 	struct netdev_vif *ndev_vif;
 
 	SLSI_INFO_NODEV("Notifier event received: %lu\n", event);
@@ -64,6 +69,22 @@ static int sap_mlme_notifier(struct slsi_dev *sdev, unsigned long event)
 		break;
 
 	case SCSC_WIFI_RESUME:
+#ifdef CONFIG_SLSI_WLAN_STA_FWD_BEACON
+		dev = slsi_get_netdev(sdev, SLSI_NET_INDEX_WLAN);
+		ndev_vif = netdev_priv(dev);
+		SLSI_MUTEX_LOCK(ndev_vif->vif_mutex);
+
+		if ((ndev_vif->is_wips_running) && (ndev_vif->activated) &&
+		    (ndev_vif->vif_type == FAPI_VIFTYPE_STATION) &&
+		    (ndev_vif->sta.vif_status == SLSI_VIF_STATUS_CONNECTED)) {
+			ndev_vif->is_wips_running = false;
+
+			slsi_send_forward_beacon_abort_vendor_event(sdev, SLSI_FORWARD_BEACON_ABORT_REASON_SUSPENDED);
+			SLSI_INFO_NODEV("FORWARD_BEACON: SUSPEND_RESUMED!! send abort event\n");
+		}
+
+		SLSI_MUTEX_UNLOCK(ndev_vif->vif_mutex);
+#endif
 		break;
 
 	default:
@@ -186,6 +207,11 @@ static int slsi_rx_netdev_mlme(struct slsi_dev *sdev, struct net_device *dev, st
 	case MLME_SYNCHRONISED_IND:
 		slsi_rx_synchronised_ind(sdev, dev, skb);
 		slsi_kfree_skb(skb);
+		break;
+#endif
+#ifdef CONFIG_SLSI_WLAN_STA_FWD_BEACON
+	case MLME_BEACON_REPORTING_EVENT_IND:
+		slsi_rx_beacon_reporting_event_ind(sdev, dev, skb);
 		break;
 #endif
 	default:

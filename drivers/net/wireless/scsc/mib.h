@@ -6938,6 +6938,10 @@ void slsi_mib_buf_append(struct slsi_mib_data *dst, size_t bufferLength, u8 *buf
  *******************************************************************************/
 #define SLSI_PSID_UNIFI_READ_REG 0x1F73
 
+/*AUTOGEN TBD*/
+#define SLSI_PSID_UNIFI_ROAM_SOFT_ROAMING_ENABLED 0x0806
+#define SLSI_PSID_UNIFI_PREFERRED_ANTENNA_BIT_MAP 0x08E6
+
 #ifdef __cplusplus
 }
 #endif

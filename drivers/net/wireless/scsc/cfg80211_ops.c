@@ -17,6 +17,7 @@
 #include "mib.h"
 
 #include "scsc_wifilogger_rings.h"
+#include "nl80211_vendor.h"
 
 #define SLSI_MAX_CHAN_2G_BAND          14
 
@@ -475,7 +476,20 @@ int slsi_scan(struct wiphy *wiphy, struct net_device *dev,
 		r = -EBUSY;
 		goto exit;
 	}
+#ifdef CONFIG_SLSI_WLAN_STA_FWD_BEACON
+	if (ndev_vif->is_wips_running && (ndev_vif->vif_type == FAPI_VIFTYPE_STATION) &&
+	    (ndev_vif->sta.vif_status == SLSI_VIF_STATUS_CONNECTED)) {
+		int ret = 0;
 
+		SLSI_NET_DBG3(dev, SLSI_CFG80211, "Scan invokes DRIVER_BCN_ABORT\n");
+		ret = slsi_mlme_set_forward_beacon(sdev, dev, FAPI_ACTION_STOP);
+
+		if (!ret) {
+			ret = slsi_send_forward_beacon_abort_vendor_event(sdev,
+									  SLSI_FORWARD_BEACON_ABORT_REASON_SCANNING);
+		}
+	}
+#endif
 	SLSI_NET_DBG3(dev, SLSI_CFG80211, "channels:%d, ssids:%d, ie_len:%d, vif_index:%d\n", request->n_channels,
 		      request->n_ssids, (int)request->ie_len, ndev_vif->ifnum);
 
@@ -2382,7 +2396,6 @@ int slsi_start_ap(struct wiphy *wiphy, struct net_device *dev,
 	if (SLSI_IS_VIF_INDEX_MHS(sdev, ndev_vif))
 		ndev_vif->chan = settings->chandef.chan;
 #endif
-
 	if (r != 0) {
 		SLSI_NET_ERR(dev, "Start ap failed: resultcode = %d frequency = %d\n", r,
 			     settings->chandef.chan->center_freq);
@@ -2390,7 +2403,12 @@ int slsi_start_ap(struct wiphy *wiphy, struct net_device *dev,
 	} else if (ndev_vif->iftype == NL80211_IFTYPE_P2P_GO) {
 		SLSI_P2P_STATE_CHANGE(sdev, P2P_GROUP_FORMED_GO);
 	}
-
+#ifdef CONFIG_SCSC_WLAN_SET_NUM_ANTENNAS
+	if (ndev_vif->iftype == NL80211_IFTYPE_AP) {
+		/* Don't care results. */
+		slsi_set_num_antennas(dev, 1 /*SISO*/);
+	}
+#endif
 	ndev_vif->ap.beacon_interval = settings->beacon_interval;
 	ndev_vif->ap.ssid_len = settings->ssid_len;
 	memcpy(ndev_vif->ap.ssid, settings->ssid, settings->ssid_len);

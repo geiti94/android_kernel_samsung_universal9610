@@ -354,38 +354,38 @@ static int hip4_proc_show(struct seq_file *m, void *v)
 		seq_printf(m, "q_idx_sz              = 0x%x\n", hip_control->config_v4.q_idx_sz);
 		for (i = 0; i < MIF_HIP_CFG_Q_NUM; i++)
 			seq_printf(m, "q_loc[%d]            = 0x%x\n", i, hip_control->config_v4.q_loc[i]);
-	} else if (conf_hip4_ver == 3) {
-		seq_printf(m, "hip4_version_3 addr = 0x%p\n", &hip_control->config_v3);
-		seq_printf(m, "magic_number        = 0x%x\n", hip_control->config_v3.magic_number);
-		seq_printf(m, "hip_config_ver      = 0x%x\n", hip_control->config_v3.hip_config_ver);
-		seq_printf(m, "config_len          = 0x%x\n", hip_control->config_v3.config_len);
-		seq_printf(m, "compat_flag         = 0x%x\n", hip_control->config_v3.compat_flag);
-		seq_printf(m, "sap_mlme_ver        = 0x%x\n", hip_control->config_v3.sap_mlme_ver);
-		seq_printf(m, "sap_ma_ver          = 0x%x\n", hip_control->config_v3.sap_ma_ver);
-		seq_printf(m, "sap_debug_ver       = 0x%x\n", hip_control->config_v3.sap_debug_ver);
-		seq_printf(m, "sap_test_ver        = 0x%x\n", hip_control->config_v3.sap_test_ver);
-		seq_printf(m, "fw_build_id         = 0x%x\n", hip_control->config_v3.fw_build_id);
-		seq_printf(m, "fw_patch_id         = 0x%x\n", hip_control->config_v3.fw_patch_id);
-		seq_printf(m, "unidat_req_headroom = 0x%x\n", hip_control->config_v3.unidat_req_headroom);
-		seq_printf(m, "unidat_req_tailroom = 0x%x\n", hip_control->config_v3.unidat_req_tailroom);
-		seq_printf(m, "bulk_buffer_align   = 0x%x\n", hip_control->config_v3.bulk_buffer_align);
-		seq_printf(m, "host_cache_line     = 0x%x\n", hip_control->config_v3.host_cache_line);
-		seq_printf(m, "host_buf_loc        = 0x%x\n", hip_control->config_v3.host_buf_loc);
-		seq_printf(m, "host_buf_sz         = 0x%x\n", hip_control->config_v3.host_buf_sz);
-		seq_printf(m, "fw_buf_loc          = 0x%x\n", hip_control->config_v3.fw_buf_loc);
-		seq_printf(m, "fw_buf_sz           = 0x%x\n", hip_control->config_v3.fw_buf_sz);
-		seq_printf(m, "mib_buf_loc         = 0x%x\n", hip_control->config_v3.mib_loc);
-		seq_printf(m, "mib_buf_sz          = 0x%x\n", hip_control->config_v3.mib_sz);
-		seq_printf(m, "log_config_loc      = 0x%x\n", hip_control->config_v3.log_config_loc);
-		seq_printf(m, "log_config_sz       = 0x%x\n", hip_control->config_v3.log_config_sz);
-		seq_printf(m, "mif_fh_int_n        = 0x%x\n", hip_control->config_v3.mif_fh_int_n);
-		seq_printf(m, "mif_th_int_n        = 0x%x\n", hip_control->config_v3.mif_th_int_n);
-		seq_printf(m, "scbrd_loc           = 0x%x\n", hip_control->config_v3.scbrd_loc);
-		seq_printf(m, "q_num               = 0x%x\n", hip_control->config_v3.q_num);
-		seq_printf(m, "q_len               = 0x%x\n", hip_control->config_v3.q_len);
-		seq_printf(m, "q_idx_sz            = 0x%x\n", hip_control->config_v3.q_idx_sz);
+	} else if (conf_hip4_ver == 5) {
+		seq_printf(m, "hip4_version_5 addr = 0x%p\n", &hip_control->config_v5);
+		seq_printf(m, "magic_number        = 0x%x\n", hip_control->config_v5.magic_number);
+		seq_printf(m, "hip_config_ver      = 0x%x\n", hip_control->config_v5.hip_config_ver);
+		seq_printf(m, "config_len          = 0x%x\n", hip_control->config_v5.config_len);
+		seq_printf(m, "compat_flag         = 0x%x\n", hip_control->config_v5.compat_flag);
+		seq_printf(m, "sap_mlme_ver        = 0x%x\n", hip_control->config_v5.sap_mlme_ver);
+		seq_printf(m, "sap_ma_ver          = 0x%x\n", hip_control->config_v5.sap_ma_ver);
+		seq_printf(m, "sap_debug_ver       = 0x%x\n", hip_control->config_v5.sap_debug_ver);
+		seq_printf(m, "sap_test_ver        = 0x%x\n", hip_control->config_v5.sap_test_ver);
+		seq_printf(m, "fw_build_id         = 0x%x\n", hip_control->config_v5.fw_build_id);
+		seq_printf(m, "fw_patch_id         = 0x%x\n", hip_control->config_v5.fw_patch_id);
+		seq_printf(m, "unidat_req_headroom = 0x%x\n", hip_control->config_v5.unidat_req_headroom);
+		seq_printf(m, "unidat_req_tailroom = 0x%x\n", hip_control->config_v5.unidat_req_tailroom);
+		seq_printf(m, "bulk_buffer_align   = 0x%x\n", hip_control->config_v5.bulk_buffer_align);
+		seq_printf(m, "host_cache_line     = 0x%x\n", hip_control->config_v5.host_cache_line);
+		seq_printf(m, "host_buf_loc        = 0x%x\n", hip_control->config_v5.host_buf_loc);
+		seq_printf(m, "host_buf_sz         = 0x%x\n", hip_control->config_v5.host_buf_sz);
+		seq_printf(m, "fw_buf_loc          = 0x%x\n", hip_control->config_v5.fw_buf_loc);
+		seq_printf(m, "fw_buf_sz           = 0x%x\n", hip_control->config_v5.fw_buf_sz);
+		seq_printf(m, "mib_buf_loc         = 0x%x\n", hip_control->config_v5.mib_loc);
+		seq_printf(m, "mib_buf_sz          = 0x%x\n", hip_control->config_v5.mib_sz);
+		seq_printf(m, "log_config_loc      = 0x%x\n", hip_control->config_v5.log_config_loc);
+		seq_printf(m, "log_config_sz       = 0x%x\n", hip_control->config_v5.log_config_sz);
+		seq_printf(m, "mif_fh_int_n        = 0x%x\n", hip_control->config_v5.mif_fh_int_n);
+		seq_printf(m, "mif_th_int_n        = 0x%x\n", hip_control->config_v5.mif_th_int_n);
+		seq_printf(m, "scbrd_loc           = 0x%x\n", hip_control->config_v5.scbrd_loc);
+		seq_printf(m, "q_num               = 0x%x\n", hip_control->config_v5.q_num);
+		seq_printf(m, "q_len               = 0x%x\n", hip_control->config_v5.q_len);
+		seq_printf(m, "q_idx_sz            = 0x%x\n", hip_control->config_v5.q_idx_sz);
 		for (i = 0; i < MIF_HIP_CFG_Q_NUM; i++)
-			seq_printf(m, "q_loc[%d]            = 0x%x\n", i, hip_control->config_v3.q_loc[i]);
+			seq_printf(m, "q_loc[%d]            = 0x%x\n", i, hip_control->config_v5.q_loc[i]);
 	}
 	seq_puts(m, "\n-----------------------------------------\n");
 	seq_puts(m, "HIP4 SCOREBOARD INDEXES:\n");
@@ -503,7 +503,7 @@ static void hip4_update_index(struct slsi_hip4 *hip, u32 q, enum rw r_w, u8 valu
 	struct hip4_priv    *hip_priv = hip->hip_priv;
 
 	write_lock_bh(&hip_priv->rw_scoreboard);
-	if (hip->hip_priv->version == 3 || hip->hip_priv->version == 4) {
+	if (hip->hip_priv->version == 5 || hip->hip_priv->version == 4) {
 		*((u8 *)(hip->hip_priv->scbrd_base + q_idx_layout[q][r_w])) = value;
 	} else {
 		SLSI_ERR_NODEV("Incorrect version\n");
@@ -525,7 +525,7 @@ static u8 hip4_read_index(struct slsi_hip4 *hip, u32 q, enum rw r_w)
 	u32                 value = 0;
 
 	read_lock_bh(&hip_priv->rw_scoreboard);
-	if (hip->hip_priv->version == 3 || hip->hip_priv->version == 4) {
+	if (hip->hip_priv->version == 5 || hip->hip_priv->version == 4) {
 		value = *((u8 *)(hip->hip_priv->scbrd_base + q_idx_layout[q][r_w]));
 	} else {
 		SLSI_ERR_NODEV("Incorrect version\n");
@@ -982,6 +982,8 @@ static void hip4_watchdog(unsigned long data)
 #ifdef CONFIG_SCSC_WLAN_RX_NAPI
 	if (conf_hip4_ver == 4) {
 		for (u8 i = 0; i < MIF_HIP_CFG_Q_NUM; i++) {
+			if (hip->hip_priv->intr_tohost_mul[i] == MIF_NO_IRQ)
+				continue;
 			if (scsc_service_mifintrbit_bit_mask_status_get(service) & (1 << hip->hip_priv->intr_tohost_mul[i])) {
 				/* Interrupt might be pending! */
 				SLSI_INFO_NODEV("%d: Interrupt Masked. Unmask to restart Interrupt processing\n", i);
@@ -1007,20 +1009,6 @@ exit:
 }
 
 #ifdef CONFIG_SCSC_WLAN_RX_NAPI
-static void hip4_irq_handler_stub(int irq, void *data)
-{
-	struct slsi_hip4	*hip = (struct slsi_hip4 *)data;
-	struct slsi_dev     *sdev = container_of(hip, struct slsi_dev, hip4_inst);
-
-	/* should not happen */
-	WARN_ON(1);
-
-	/* mask all interrupts or else will get stuck in interrupt loop */
-	scsc_service_mifintrbit_bit_mask(sdev->service, hip->hip_priv->intr_tohost_mul[HIP4_MIF_Q_FH_CTRL]);
-	scsc_service_mifintrbit_bit_mask(sdev->service, hip->hip_priv->intr_tohost_mul[HIP4_MIF_Q_FH_DAT]);
-	scsc_service_mifintrbit_bit_mask(sdev->service, hip->hip_priv->intr_tohost_mul[HIP4_MIF_Q_TH_RFB]);
-}
-
 static void hip4_wq_fb(struct work_struct *data)
 {
 	struct hip4_priv        *hip_priv = container_of(data, struct hip4_priv, intr_wq_fb);
@@ -2213,12 +2201,11 @@ int hip4_init(struct slsi_hip4 *hip)
 	/* TOHOST Handler allocator */
 #ifdef CONFIG_SCSC_WLAN_RX_NAPI
 	/* Q0 FH CTRL */
-	hip->hip_priv->intr_tohost_mul[HIP4_MIF_Q_FH_CTRL] =
-		scsc_service_mifintrbit_register_tohost(service, hip4_irq_handler_stub, hip);
-	/* Mask the interrupt to prevent intr been kicked during start */
-	scsc_service_mifintrbit_bit_mask(service, hip->hip_priv->intr_tohost_mul[HIP4_MIF_Q_FH_CTRL]);
-	/* Q1 FH DAT - Use the same stub interrupt handler */
-	hip->hip_priv->intr_tohost_mul[HIP4_MIF_Q_FH_DAT] = hip->hip_priv->intr_tohost_mul[HIP4_MIF_Q_FH_CTRL];
+	hip->hip_priv->intr_tohost_mul[HIP4_MIF_Q_FH_CTRL] = MIF_NO_IRQ;
+	/* Q1 FH DATA */
+	hip->hip_priv->intr_tohost_mul[HIP4_MIF_Q_FH_DAT] = MIF_NO_IRQ;
+	/* Q5 TH RFB */
+	hip->hip_priv->intr_tohost_mul[HIP4_MIF_Q_TH_RFB] = MIF_NO_IRQ;
 	/* Q2 FH FB */
 	hip->hip_priv->intr_tohost_mul[HIP4_MIF_Q_FH_RFB] =
 		scsc_service_mifintrbit_register_tohost(service, hip4_irq_handler_fb, hip);
@@ -2231,10 +2218,7 @@ int hip4_init(struct slsi_hip4 *hip)
 	hip->hip_priv->intr_tohost_mul[HIP4_MIF_Q_TH_DAT] =
 		scsc_service_mifintrbit_register_tohost(service, hip4_irq_handler_dat, hip);
 	scsc_service_mifintrbit_bit_mask(service, hip->hip_priv->intr_tohost_mul[HIP4_MIF_Q_TH_DAT]);
-	/* Q5 TH RFB - Use the same stub interrupt handler */
-	hip->hip_priv->intr_tohost_mul[HIP4_MIF_Q_TH_RFB] = hip->hip_priv->intr_tohost_mul[HIP4_MIF_Q_FH_CTRL];
 #endif
-	/***** VERSION 3 *******/
 	/* TOHOST Handler allocator */
 	hip->hip_priv->intr_tohost =
 		scsc_service_mifintrbit_register_tohost(service, hip4_irq_handler, hip);
@@ -2266,8 +2250,8 @@ int hip4_init(struct slsi_hip4 *hip)
 		SLSI_ERR_NODEV("MIB size (%d), is bigger than the MIB AREA (%d). Aborting memcpy\n", total_mib_len, HIP4_WLAN_MIB_SIZE);
 		hip_control->config_v4.mib_loc      = 0;
 		hip_control->config_v4.mib_sz       = 0;
-		hip_control->config_v3.mib_loc      = 0;
-		hip_control->config_v3.mib_sz       = 0;
+		hip_control->config_v5.mib_loc      = 0;
+		hip_control->config_v5.mib_sz       = 0;
 		total_mib_len = 0;
 	} else if (total_mib_len) {
 		SLSI_INFO_NODEV("Loading MIB into shared memory, size (%d)\n", total_mib_len);
@@ -2283,13 +2267,13 @@ int hip4_init(struct slsi_hip4 *hip)
 		}
 		hip_control->config_v4.mib_loc      = hip->hip_ref + HIP4_WLAN_MIB_OFFSET;
 		hip_control->config_v4.mib_sz       = total_mib_len;
-		hip_control->config_v3.mib_loc      = hip->hip_ref + HIP4_WLAN_MIB_OFFSET;
-		hip_control->config_v3.mib_sz       = total_mib_len;
+		hip_control->config_v5.mib_loc      = hip->hip_ref + HIP4_WLAN_MIB_OFFSET;
+		hip_control->config_v5.mib_sz       = total_mib_len;
 	} else {
 		hip_control->config_v4.mib_loc      = 0;
 		hip_control->config_v4.mib_sz       = 0;
-		hip_control->config_v3.mib_loc      = 0;
-		hip_control->config_v3.mib_sz       = 0;
+		hip_control->config_v5.mib_loc      = 0;
+		hip_control->config_v5.mib_sz       = 0;
 	}
 
 	/* Initialize hip_control table for version 4 */
@@ -2325,31 +2309,31 @@ int hip4_init(struct slsi_hip4 *hip)
 	}
 	/***** END VERSION 4 *******/
 
-	/* Initialize hip_control table for version 3 */
-	/***** VERSION 3 *******/
-	hip_control->config_v3.magic_number = 0xcaba0401;
-	hip_control->config_v3.hip_config_ver = 3;
-	hip_control->config_v3.config_len = sizeof(struct hip4_hip_config_version_3);
-	hip_control->config_v3.host_cache_line = 64;
-	hip_control->config_v3.host_buf_loc = hip->hip_ref + HIP4_WLAN_TX_OFFSET;
-	hip_control->config_v3.host_buf_sz  = HIP4_WLAN_TX_SIZE;
-	hip_control->config_v3.fw_buf_loc   = hip->hip_ref + HIP4_WLAN_RX_OFFSET;
-	hip_control->config_v3.fw_buf_sz    = HIP4_WLAN_RX_SIZE;
-	hip_control->config_v3.log_config_loc = 0;
-	hip_control->config_v3.mif_fh_int_n = hip->hip_priv->intr_fromhost;
-	hip_control->config_v3.mif_th_int_n = hip->hip_priv->intr_tohost;
-	hip_control->config_v3.q_num = 6;
-	hip_control->config_v3.q_len = 256;
-	hip_control->config_v3.q_idx_sz = 1;
-	hip_control->config_v3.scbrd_loc = (u32)ref_scoreboard; /* scoreborad location */
+	/* Initialize hip_control table for version 5 */
+	/***** VERSION 5 *******/
+	hip_control->config_v5.magic_number = 0xcaba0401;
+	hip_control->config_v5.hip_config_ver = 5;
+	hip_control->config_v5.config_len = sizeof(struct hip4_hip_config_version_5);
+	hip_control->config_v5.host_cache_line = 64;
+	hip_control->config_v5.host_buf_loc = hip->hip_ref + HIP4_WLAN_TX_OFFSET;
+	hip_control->config_v5.host_buf_sz  = HIP4_WLAN_TX_SIZE;
+	hip_control->config_v5.fw_buf_loc   = hip->hip_ref + HIP4_WLAN_RX_OFFSET;
+	hip_control->config_v5.fw_buf_sz    = HIP4_WLAN_RX_SIZE;
+	hip_control->config_v5.log_config_loc = 0;
+	hip_control->config_v5.mif_fh_int_n = hip->hip_priv->intr_fromhost;
+	hip_control->config_v5.mif_th_int_n = hip->hip_priv->intr_tohost;
+	hip_control->config_v5.q_num = 6;
+	hip_control->config_v5.q_len = 256;
+	hip_control->config_v5.q_idx_sz = 1;
+	hip_control->config_v5.scbrd_loc = (u32)ref_scoreboard; /* scoreborad location */
 
 	/* Initialize q relative positions */
 	for (i = 0; i < MIF_HIP_CFG_Q_NUM; i++) {
 		if (scsc_mx_service_mif_ptr_to_addr(service, &hip_control->q[i].array, &ref))
 			return -EFAULT;
-		hip_control->config_v3.q_loc[i] = (u32)ref;
+		hip_control->config_v5.q_loc[i] = (u32)ref;
 	}
-	/***** END VERSION 3 *******/
+	/***** END VERSION 5 *******/
 
 	/* Initialzie hip_init configuration */
 	hip_control->init.magic_number = 0xcaaa0400;
@@ -2357,7 +2341,7 @@ int hip4_init(struct slsi_hip4 *hip)
 		return -EFAULT;
 	hip_control->init.version_a_ref = ref;
 
-	if (scsc_mx_service_mif_ptr_to_addr(service, &hip_control->config_v3, &ref))
+	if (scsc_mx_service_mif_ptr_to_addr(service, &hip_control->config_v5, &ref))
 		return -EFAULT;
 	hip_control->init.version_b_ref = ref;
 	/* End hip_init configuration */
@@ -2370,6 +2354,14 @@ int hip4_init(struct slsi_hip4 *hip)
 	spin_lock_init(&hip->hip_priv->tx_lock);
 	atomic_set(&hip->hip_priv->in_tx, 0);
 
+#ifdef CONFIG_ANDROID
+#ifdef CONFIG_SCSC_WLAN_RX_NAPI
+	wake_lock_init(&hip->hip_priv->hip4_wake_lock_tx, WAKE_LOCK_SUSPEND, "hip4_wake_lock_tx");
+	wake_lock_init(&hip->hip_priv->hip4_wake_lock_ctrl, WAKE_LOCK_SUSPEND, "hip4_wake_lock_ctrl");
+	wake_lock_init(&hip->hip_priv->hip4_wake_lock_data, WAKE_LOCK_SUSPEND, "hip4_wake_lock_data");
+#endif
+	wake_lock_init(&hip->hip_priv->hip4_wake_lock, WAKE_LOCK_SUSPEND, "hip4_wake_lock");
+#endif
 	/* Init work structs */
 	hip->hip_priv->hip4_workq = create_singlethread_workqueue("hip4_work");
 	if (!hip->hip_priv->hip4_workq) {
@@ -2395,14 +2387,6 @@ int hip4_init(struct slsi_hip4 *hip)
 	spin_lock_init(&hip->hip_priv->gbot_lock);
 	hip->hip_priv->saturated = 0;
 
-#ifdef CONFIG_ANDROID
-#ifdef CONFIG_SCSC_WLAN_RX_NAPI
-	wake_lock_init(&hip->hip_priv->hip4_wake_lock_tx, WAKE_LOCK_SUSPEND, "hip4_wake_lock_tx");
-	wake_lock_init(&hip->hip_priv->hip4_wake_lock_ctrl, WAKE_LOCK_SUSPEND, "hip4_wake_lock_ctrl");
-	wake_lock_init(&hip->hip_priv->hip4_wake_lock_data, WAKE_LOCK_SUSPEND, "hip4_wake_lock_data");
-#endif
-	wake_lock_init(&hip->hip_priv->hip4_wake_lock, WAKE_LOCK_SUSPEND, "hip4_wake_lock");
-#endif
 #ifdef CONFIG_SCSC_SMAPPER
 	/* Init SMAPPER */
 	if (hip4_smapper_enable) {
@@ -2638,12 +2622,12 @@ int hip4_setup(struct slsi_hip4 *hip)
 		rcu_read_unlock();
 #endif
 	} else {
-		/* version 3 */
+		/* version 5 */
 		hip->hip_priv->unidat_req_headroom =
-			scsc_wifi_get_hip_config_u8(&hip->hip_control, unidat_req_headroom, 3);
+			scsc_wifi_get_hip_config_u8(&hip->hip_control, unidat_req_headroom, 5);
 		hip->hip_priv->unidat_req_tailroom =
-			scsc_wifi_get_hip_config_u8(&hip->hip_control, unidat_req_tailroom, 3);
-		hip->hip_priv->version = 3;
+			scsc_wifi_get_hip_config_u8(&hip->hip_control, unidat_req_tailroom, 5);
+		hip->hip_priv->version = 5;
 	}
 	/* Unmask interrupts - now host should handle them */
 	atomic_set(&hip->hip_priv->stats.irqs, 0);
@@ -2700,7 +2684,8 @@ void hip4_suspend(struct slsi_hip4 *hip)
 
 	if (conf_hip4_ver == 4) {
 		for (u8 i = 0; i < MIF_HIP_CFG_Q_NUM; i++)
-			scsc_service_mifintrbit_bit_unmask(service, hip->hip_priv->intr_tohost_mul[i]);
+			if (hip->hip_priv->intr_tohost_mul[i] != MIF_NO_IRQ)
+				scsc_service_mifintrbit_bit_unmask(service, hip->hip_priv->intr_tohost_mul[i]);
 	} else {
 		scsc_service_mifintrbit_bit_unmask(service, hip->hip_priv->intr_tohost);
 	}
@@ -2734,7 +2719,8 @@ void hip4_resume(struct slsi_hip4 *hip)
 
 	if (conf_hip4_ver == 4) {
 		for (u8 i = 0; i < MIF_HIP_CFG_Q_NUM; i++)
-			scsc_service_mifintrbit_bit_unmask(service, hip->hip_priv->intr_tohost_mul[i]);
+			if (hip->hip_priv->intr_tohost_mul[i] != MIF_NO_IRQ)
+				scsc_service_mifintrbit_bit_unmask(service, hip->hip_priv->intr_tohost_mul[i]);
 	} else {
 		scsc_service_mifintrbit_bit_unmask(service, hip->hip_priv->intr_tohost);
 	}
@@ -2776,7 +2762,8 @@ void hip4_freeze(struct slsi_hip4 *hip)
 
 	if (conf_hip4_ver == 4) {
 		for (u8 i = 0; i < MIF_HIP_CFG_Q_NUM; i++)
-			scsc_service_mifintrbit_bit_mask(service, hip->hip_priv->intr_tohost_mul[i]);
+			if (hip->hip_priv->intr_tohost_mul[i] != MIF_NO_IRQ)
+				scsc_service_mifintrbit_bit_mask(service, hip->hip_priv->intr_tohost_mul[i]);
 
 		tasklet_kill(&hip->hip_priv->intr_tasklet);
 		cancel_work_sync(&hip->hip_priv->intr_wq_ctrl);
@@ -2841,14 +2828,16 @@ void hip4_deinit(struct slsi_hip4 *hip)
 
 #ifdef CONFIG_SCSC_WLAN_RX_NAPI
 	for (u8 i = 0; i < MIF_HIP_CFG_Q_NUM; i++)
-		scsc_service_mifintrbit_bit_mask(service, hip->hip_priv->intr_tohost_mul[i]);
+		if (hip->hip_priv->intr_tohost_mul[i] != MIF_NO_IRQ)
+			scsc_service_mifintrbit_bit_mask(service, hip->hip_priv->intr_tohost_mul[i]);
 
 	tasklet_kill(&hip->hip_priv->intr_tasklet);
 	cancel_work_sync(&hip->hip_priv->intr_wq_ctrl);
 	cancel_work_sync(&hip->hip_priv->intr_wq_fb);
 
 	for (i = 0; i < MIF_HIP_CFG_Q_NUM; i++)
-		scsc_service_mifintrbit_unregister_tohost(service, hip->hip_priv->intr_tohost_mul[i]);
+		if (hip->hip_priv->intr_tohost_mul[i] != MIF_NO_IRQ)
+			scsc_service_mifintrbit_unregister_tohost(service, hip->hip_priv->intr_tohost_mul[i]);
 
 	/* Get the Version reported by the FW */
 	conf_hip4_ver = scsc_wifi_get_hip_config_version(&hip->hip_control->init);

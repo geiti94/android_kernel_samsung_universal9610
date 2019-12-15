@@ -212,4 +212,4 @@ struct mxfwconfig *scsc_mx_get_mxfwconfig(struct scsc_mx *mx)
 {
 	return &mx->mxfwconfig;
 }
-EXPORT_SYMBOL_GPL(scsc_mx_get_mxfwconfig); /* TODO: export a top-level API for this */
+
